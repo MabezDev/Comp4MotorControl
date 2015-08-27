@@ -1,0 +1,202 @@
+import serial
+
+import time
+
+import piface.pfio as pfio
+
+import math
+
+import sys
+
+CommandListRead = []
+
+CurrentState = "Listen"
+
+class start:
+
+    def __init__(self):
+
+       while True:
+
+            self.Clear()
+
+            AudioListen = AudioArduino()
+
+            AudioListen.startListen()
+
+            #self.checker()
+
+            Motor = MotorControl()
+
+    def Clear(self):
+
+        try:
+
+            del CommandListRead[:]
+
+        except Exception,e:
+
+            print(e)
+
+        #print(CommandListRead)
+
+    def checker(self):
+
+        while True:
+
+            
+
+            if(AudioListen.FinishTransmission==True):
+
+##functiontogothrough array sortoutloopsect and formatmaybestory in xmlformat whoknows
+
+                CurrentState="GO"
+
+            if(CurrentState=="GO"):
+
+                time.sleep(15)
+
+                runMotors= MotorControl()
+
+                
+class AudioArduino:
+
+    def __init__(self):
+
+        try:
+
+            try:
+
+                self.s = serial.Serial("/dev/ttyACM0",9600)##and try for ACM0
+
+                print("Opened on ACM0")
+
+            except Exception:
+
+                print("Opened on ACM1")
+
+                self.s = serial.Serial("/dev/ttyACM1",9600)
+
+        except Exception:
+
+            print("No Arduino Device Found")
+
+        self.FinishTransmission=False
+
+        self.read=""
+
+    def startListen(self):
+
+        while self.FinishTransmission==False:
+
+            self.read = self.s.read(1)
+
+            print(self.read)
+
+            if(self.read=="e"):
+
+                self.s.close()
+
+                self.FinishTransmission = True
+
+            elif self.read=="s":
+
+                try:
+
+                    del CommandListRead[:]
+
+                except Exception,e:
+
+                    print(e)
+
+                #print(CommandListRead)
+
+            else:
+
+                CommandListRead.append(self.read)
+
+        else:
+
+            self.s.close()#kill serial connection
+
+            self.FinishTransmisson=True
+
+            time.sleep(1)   #completes AudioArduino Class life cyle
+
+                                       #Continues to motor
+
+class MotorControl:
+
+    def __init__(self):
+
+        pfio.init()
+
+        self.prev=True
+
+        self.state=True
+
+        self.Motor()
+
+    def Motor(self):
+
+        j=0
+
+        while (j < len(CommandListRead)):
+
+            for i in CommandListRead:
+
+                print(i)
+
+                if(i=="r"):
+
+                    j+=1
+
+                    self.Right()
+
+                if(i=="l"):
+
+                    j+=1
+
+                    self.Left()
+
+                if(i=="f"):
+
+                    j+=1
+
+                    self.Forward()
+
+        else:
+
+            CurrentState="Listen"
+
+                    
+
+    def Right(self):
+
+        pfio.digital_write(0,1)
+
+        time.sleep(2)
+
+        pfio.digital_write(0,0)
+
+    def Left(self):
+
+        pfio.digital_write(1,1)
+
+        time.sleep(2)
+
+        pfio.digital_write(1,0)
+
+    def Forward(self):
+
+        pfio.digital_write(1,1)
+
+        pfio.digital_write(0,1)
+
+        time.sleep(2)
+
+        pfio.digital_write(1,0)
+
+        pfio.digital_write(0,0)
+
+starter = start()
